@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1049870043140",
+    "project_id": "apibusunheval",
+    "storage_bucket": "apibusunheval.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1049870043140:android:3129c330374e55c3574d51",
+        "android_client_info": {
+          "package_name": "com.systemdk.apibusunheval_conductor"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlh7JnSYZ5R5fK7dsIDP6IcW05XlGSE58"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
