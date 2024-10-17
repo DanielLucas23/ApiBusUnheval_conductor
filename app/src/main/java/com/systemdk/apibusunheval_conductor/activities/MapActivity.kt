@@ -132,7 +132,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, Listener {
                 override fun onResponse(p0: Call<Notification>, p1: Response<Notification>) {
                     Toast.makeText(this@MapActivity,
                         "Notificación Enviada",
-                        Toast.LENGTH_LONG).show()
+                        Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onFailure(p0: Call<Notification>, p1: Throwable) {
