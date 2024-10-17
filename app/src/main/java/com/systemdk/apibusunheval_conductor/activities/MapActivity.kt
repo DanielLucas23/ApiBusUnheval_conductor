@@ -8,8 +8,10 @@ import android.graphics.drawable.Drawable
 import android.location.Location
 import android.os.Build
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -29,11 +31,25 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.messaging.FirebaseMessaging
+import com.karumi.dexter.Dexter
+import com.karumi.dexter.PermissionToken
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.PermissionRequest
+import com.karumi.dexter.listener.single.PermissionListener
 import com.systemdk.apibusunheval_conductor.R
+import com.systemdk.apibusunheval_conductor.api.NotificationAPI
 import com.systemdk.apibusunheval_conductor.databinding.ActivityMapBinding
 import com.systemdk.apibusunheval_conductor.fragments.ModalBottonSheetMenu
+import com.systemdk.apibusunheval_conductor.models.Notification
+
+import com.systemdk.apibusunheval_conductor.models.NotificationData
 import com.systemdk.apibusunheval_conductor.providers.AuthProvider
 import com.systemdk.apibusunheval_conductor.providers.GeoProvider
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, Listener {
 
@@ -70,10 +86,63 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, Listener {
             Manifest.permission.ACCESS_COARSE_LOCATION
         ))
 
-        binding.btnConnect.setOnClickListener { connectConductor() }
+        binding.btnConnect.setOnClickListener {
+            connectConductor()
+            sendNotification()
+        }
         binding.btnDisconnect.setOnClickListener { disconnectConductor() }
 
         binding.imageViewMenu.setOnClickListener { showModalMenu() }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Dexter.withContext(applicationContext)
+                .withPermission(Manifest.permission.POST_NOTIFICATIONS)
+                .withListener(object: PermissionListener{
+                    override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    }
+
+                    override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
+                    }
+
+                    override fun onPermissionRationaleShouldBeShown(
+                        p0: PermissionRequest?,
+                        p1: PermissionToken?
+                    ) {
+                        p1?.continuePermissionRequest()
+                    }
+                }).check()
+        }
+
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
+
+        FirebaseMessaging.getInstance().subscribeToTopic("test")
+    }
+
+    private fun sendNotification(){
+        val notification = Notification(
+            message = NotificationData(
+                "test",
+                hashMapOf("title" to "Esta es el titulo de la notificación",
+                    "body" to "Este el mensaje desde la API firebase")
+            )
+        )
+        NotificationAPI.sendNotification().notification(notification).enqueue(
+            object: Callback<Notification>{
+                override fun onResponse(p0: Call<Notification>, p1: Response<Notification>) {
+                    Toast.makeText(this@MapActivity,
+                        "Notificación Enviada",
+                        Toast.LENGTH_LONG).show()
+                }
+
+                override fun onFailure(p0: Call<Notification>, p1: Throwable) {
+                    Toast.makeText(this@MapActivity,
+                        "Error: ${p1.message}",
+                        Toast.LENGTH_LONG).show()
+                }
+
+            }
+        )
     }
 
     val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permission ->
