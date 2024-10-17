@@ -42,10 +42,12 @@ import com.systemdk.apibusunheval_conductor.R
 import com.systemdk.apibusunheval_conductor.api.NotificationAPI
 import com.systemdk.apibusunheval_conductor.databinding.ActivityMapBinding
 import com.systemdk.apibusunheval_conductor.fragments.ModalBottonSheetMenu
+import com.systemdk.apibusunheval_conductor.models.Conductor
 import com.systemdk.apibusunheval_conductor.models.Notification
 
 import com.systemdk.apibusunheval_conductor.models.NotificationData
 import com.systemdk.apibusunheval_conductor.providers.AuthProvider
+import com.systemdk.apibusunheval_conductor.providers.ConductorProvider
 import com.systemdk.apibusunheval_conductor.providers.GeoProvider
 import retrofit2.Call
 import retrofit2.Callback
@@ -60,6 +62,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, Listener {
     private var myLocationLatLng: LatLng?= null
     private var markerConductor: Marker?= null
     private val geoProvider = GeoProvider()
+    private val conductorProvider = ConductorProvider()
     private val authProvider = AuthProvider()
 
     private val modalMenu = ModalBottonSheetMenu()
@@ -120,29 +123,39 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, Listener {
     }
 
     private fun sendNotification(){
-        val notification = Notification(
-            message = NotificationData(
-                "test",
-                hashMapOf("title" to "Esta es el titulo de la notificación",
-                    "body" to "Este el mensaje desde la API firebase")
-            )
-        )
-        NotificationAPI.sendNotification().notification(notification).enqueue(
-            object: Callback<Notification>{
-                override fun onResponse(p0: Call<Notification>, p1: Response<Notification>) {
-                    Toast.makeText(this@MapActivity,
-                        "Notificación Enviada",
-                        Toast.LENGTH_SHORT).show()
-                }
 
-                override fun onFailure(p0: Call<Notification>, p1: Throwable) {
-                    Toast.makeText(this@MapActivity,
-                        "Error: ${p1.message}",
-                        Toast.LENGTH_LONG).show()
-                }
+        conductorProvider.getRut(authProvider.getId()).addOnSuccessListener { rut ->
+            if (rut != null) {
+                val notification = Notification(
+                    message = NotificationData(
+                        "test",
+                        hashMapOf("title" to "Salida de Bus",
+                            "body" to "El Bus de la ruta $rut saldra en 10 minutos")
+                    )
+                )
+                NotificationAPI.sendNotification().notification(notification).enqueue(
+                    object: Callback<Notification>{
+                        override fun onResponse(p0: Call<Notification>, p1: Response<Notification>) {
+                            Toast.makeText(this@MapActivity,
+                                "Notificación Enviada",
+                                Toast.LENGTH_SHORT).show()
+                        }
 
+                        override fun onFailure(p0: Call<Notification>, p1: Throwable) {
+                            Toast.makeText(this@MapActivity,
+                                "Error: ${p1.message}",
+                                Toast.LENGTH_LONG).show()
+                        }
+
+                    }
+                )
+            } else {
+                Toast.makeText(this@MapActivity,
+                    "No se encontro la ruta",
+                    Toast.LENGTH_LONG).show()
             }
-        )
+        }
+
     }
 
     val locationPermission = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permission ->

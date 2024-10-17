@@ -40,6 +40,22 @@ class ConductorProvider {
         }
     }
 
+    fun getRut(idConductor: String): Task<String?> {
+        return db.document(idConductor).get().continueWith { task ->
+            if (task.isSuccessful) {
+                val document = task.result
+                if (document.exists()) {
+                    document.getString("rut")
+                } else {
+                    null
+                }
+            } else {
+                Log.e("Firestore", "Error al obtener el rut", task.exception)
+                null
+            }
+        }
+    }
+
     fun update(conductor: Conductor): Task<Void> {
         val map: MutableMap<String, Any> = HashMap()
 
